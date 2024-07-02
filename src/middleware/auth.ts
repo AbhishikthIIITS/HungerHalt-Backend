@@ -1,7 +1,11 @@
-import { Request,Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import { auth } from "express-oauth2-jwt-bearer";
 import jwt from 'jsonwebtoken';
 import User from "../models/user";
+import debug from 'debug';
+
+// Enable debug logging
+const log = debug('app:auth');
 
 declare global {
   namespace Express {
@@ -18,26 +22,24 @@ export const jwtCheck = auth({
   tokenSigningAlg: 'RS256'
 });
 
-export const jwtParse = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const jwtParse = async (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
 
-  if(!authorization || !authorization.startsWith("Bearer ")) {
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    log('Authorization header is missing or malformed');
     return res.sendStatus(401);
   }
 
   const token = authorization.split(" ")[1];
 
-  try{
+  try {
     const decoded = jwt.decode(token) as jwt.JwtPayload;
     const auth0Id = decoded.sub;
 
-    const user = await User.findOne({auth0Id});
+    const user = await User.findOne({ auth0Id });
 
-    if(!user || !user._id){
+    if (!user || !user._id) {
+      log('User not found or invalid user ID');
       return res.sendStatus(401);
     }
 
@@ -45,7 +47,7 @@ export const jwtParse = async (
     req.userId = user._id.toString();
     next();
   } catch (error) {
+    log('Error parsing JWT:', error);
     return res.sendStatus(401);
   }
-
 };
