@@ -3,9 +3,8 @@ import mongoose, { InferSchemaType } from "mongoose";
 
 const menuItemSchema = new mongoose.Schema({
     _id: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        required: true, 
-        defualt: () => new mongoose.Types.ObjectId()
+        type: String, 
+        required: true,
     },
     name:  { type: String, required: true},
     price: { type: Number, required: true},
